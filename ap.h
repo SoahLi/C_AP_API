@@ -2,6 +2,9 @@
 
 // This will realistically be 4
 #define AP_MAX_ENTRIES 64
+#define AP_DISABLE 0x10
+#define AP_ONESHOT 0x01
+
 
 typedef struct {
  // might want to store the user-provided address and the trampoline address
