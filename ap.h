@@ -17,6 +17,4 @@ extern uint64_t free_mask;
 int ap_reg(uintptr_t ap_addr, void(*ap_handler) (uint8_t), uint8_t ap_flags);
 void ap_ureg(uintptr_t ap_addr, void(*ap_handler)(uint8_t));
 int ap_sret(uintptr_t r_addr);
-void configure_ap(int index, uint8_t bool_active, uint8_t bool_oneshot,void *target_addr, void *trigger_addr);
-void ap_set_active(int index, uint8_t active);
 

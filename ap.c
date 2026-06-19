@@ -20,6 +20,8 @@ int alloc_empty_slot();
 int alloc_slot();
 void dealloc_slot(int index);
 ap_flags_t parse_ap_flags(uint8_t ap_flags);
+void configure_ap(int index, uint8_t bool_active, uint8_t bool_oneshot,void *target_addr, void *trigger_addr);
+void ap_set_active(int index, uint8_t active);
 
 int ap_reg(uintptr_t ap_addr, void(*ap_handler) (uint8_t), uint8_t ap_flags) {
   int idx = find_ap_idx(ap_addr, ap_handler);
@@ -40,13 +42,10 @@ void ap_ureg(uintptr_t ap_addr, void(*ap_handler)(uint8_t)) {
   for (int i = 0; i < AP_MAX_ENTRIES; i++) {
     if (ap_table[i].addr == ap_addr && ap_table[i].handler == ap_handler) {
       dealloc_slot(i);
-      ap_set_active()
+      ap_set_active(i, 0);
     }
   }
 }
-
-
-//int ap_sret(uintptr_t r_addr);
 
 
 static inline int* extract_ap_flags(uint8_t ap_flags) {
