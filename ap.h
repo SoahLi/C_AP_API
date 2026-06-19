@@ -4,6 +4,7 @@
 #define AP_MAX_ENTRIES 64
 #define AP_DISABLE 0x10
 #define AP_ONESHOT 0x01
+#define APRET() __asm__ __volatile__ ("aprt" ::: "memory", "cc")
 
 
 //extern ap_entry_t ap_table[];
@@ -18,6 +19,4 @@ void ap_ureg(uintptr_t ap_addr, void(*ap_handler)(uint8_t));
 int ap_sret(uintptr_t r_addr);
 void configure_ap(int index, uint8_t bool_active, uint8_t bool_oneshot,void *target_addr, void *trigger_addr);
 void ap_set_active(int index, uint8_t active);
-
-
 
