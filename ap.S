@@ -1,8 +1,8 @@
 /* configure_ap.S */
     .text
 
-    .equ    IAPCTRL_ACTIVE_MASK, 0b10
-    .equ    IAPCTRL_RW_MASK,     0b11
+    .equ    APCTRL_ACTIVE_MASK, 0b10
+    .equ    APCTRL_RW_MASK,     0b11
 
     .global configure_ap
     .type   configure_ap, @function
@@ -17,7 +17,7 @@ configure_ap:
 
     slli    t0, a1, 1  /* move the value of the active param into first position*/
     or      t0, t0, a2 /* move the value of the oneshot param into zeroth position*/
-    csrrci  zero, iapctrl, IAPCTRL_RW_MASK  /* clear clear the first and zeroth positions */
+    csrrci  zero, iapctrl, APCTRL_RW_MASK  /* clear clear the first and zeroth positions */
     csrrs   zero, iapctrl, t0               /* set the requested bits */
 
     ret
@@ -33,19 +33,28 @@ ap_set_active:
 
     andi    t0, a1, 1
     beqz    t0, 1f
-    csrrsi  zero, iapctrl, IAPCTRL_ACTIVE_MASK   /* set active bit only */
+    csrrsi  zero, iapctrl, APCTRL_ACTIVE_MASK   /* set active bit only */
     j       2f
 1:
-    csrrci  zero, iapctrl, IAPCTRL_ACTIVE_MASK   /* clear active bit only */
+    csrrci  zero, iapctrl, APCTRL_ACTIVE_MASK   /* clear active bit only */
 2:
     ret
     .size   ap_set_active, . - ap_set_active
 
 
-    .global ap_set_return_addr
-    .type   ap_set_return_addr, @function
+    .global ap_sret 
+    .type   ap_sret, @function
 ap_sret:
     /* a0 = index, a1 = r_addr*/
-    csrw    IAPEPC, a0
+
+    /*
+    csrw    iapselect, a0
+    csrw    APEPC, a1
     ret
     .size   ap_set_return_addr, . - ap_set_return_addr
+    */
+
+    csrw    APEPC, a0
+    ret
+    .size   ap_sret, . - ap_sret
+

@@ -5,10 +5,13 @@
 
 
 void my_fn_handler(uint8_t addr) {
+  uint8_t new_addr = 0xdeadbeef; 
+  printf("AP handler called for address: 0x%02x\n", addr);
+  printf("Redirecting execution to: 0x%02x\n", new_addr);
   //...
-  // ap_sret(addr);
+  ap_sret(new_addr);
   // now, handle for EPERM
-
+  APRET();
 }
 
 int main() {
