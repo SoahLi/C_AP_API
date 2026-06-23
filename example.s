@@ -7,10 +7,7 @@
 	.section	.rodata
 	.align	3
 .LC0:
-	.string	"AP handler called for address: 0x%02x\n"
-	.align	3
-.LC1:
-	.string	"Redirecting execution to: 0x%02x\n"
+	.string	"Handler called for address: 0x%lx\n"
 	.text
 	.align	1
 	.globl	my_fn_handler
@@ -26,29 +23,20 @@ my_fn_handler:
 	.cfi_offset 8, -16
 	addi	s0,sp,48
 	.cfi_def_cfa 8, 0
-	mv	a5,a0
-	sb	a5,-33(s0)
-	li	a5,-17
-	sb	a5,-17(s0)
-	lbu	a5,-33(s0)
-	sext.w	a5,a5
-	mv	a1,a5
+	sd	a0,-40(s0)
+	li	a5,933982208
+	slli	a5,a5,2
+	addi	a5,a5,-273
+	sd	a5,-24(s0)
+	ld	a1,-40(s0)
 	lui	a5,%hi(.LC0)
 	addi	a0,a5,%lo(.LC0)
 	call	printf
-	lbu	a5,-17(s0)
-	sext.w	a5,a5
-	mv	a1,a5
-	lui	a5,%hi(.LC1)
-	addi	a0,a5,%lo(.LC1)
-	call	printf
-	lbu	a5,-17(s0)
-	mv	a0,a5
+	ld	a0,-24(s0)
 	call	ap_sret
-	li	a5,0
 #APP
-# 14 "example.c" 1
-	apret a5, 0
+# 12 "example.c" 1
+	apret x0, 0
 # 0 "" 2
 #NO_APP
 	nop
@@ -65,13 +53,13 @@ my_fn_handler:
 	.size	my_fn_handler, .-my_fn_handler
 	.section	.rodata
 	.align	3
-.LC2:
+.LC1:
 	.string	"Invalid arguments provided to ap_reg."
 	.align	3
-.LC3:
+.LC2:
 	.string	"No more AP entries available."
 	.align	3
-.LC4:
+.LC3:
 	.string	"An unknown error occurred: %d\n"
 	.text
 	.align	1
@@ -110,13 +98,13 @@ main:
 	beq	a5,a4,.L4
 	li	a4,22
 	bne	a5,a4,.L5
-	lui	a5,%hi(.LC2)
-	addi	a0,a5,%lo(.LC2)
+	lui	a5,%hi(.LC1)
+	addi	a0,a5,%lo(.LC1)
 	call	puts
 	j	.L3
 .L4:
-	lui	a5,%hi(.LC3)
-	addi	a0,a5,%lo(.LC3)
+	lui	a5,%hi(.LC2)
+	addi	a0,a5,%lo(.LC2)
 	call	puts
 	j	.L3
 .L5:
@@ -124,8 +112,8 @@ main:
 	mv	a5,a0
 	lw	a5,0(a5)
 	mv	a1,a5
-	lui	a5,%hi(.LC4)
-	addi	a0,a5,%lo(.LC4)
+	lui	a5,%hi(.LC3)
+	addi	a0,a5,%lo(.LC3)
 	call	printf
 .L3:
 	lui	a5,%hi(my_fn_handler)
