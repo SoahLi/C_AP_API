@@ -21,14 +21,6 @@ handler. Registering an anticipation entry will result in execution
 transfering to the associated \fIap_handler\fP when the program counter
 reaches the \fIap_addr\fP.
 
-The default behavior when returning from an \fIap_handler\fP is to
-unregister the entry and resume execution at the \fIap_addr\fP. The
-return behavior may be modified by returning using \fIap_sret\fP.
-The \fIap_sret\fP call sets the return address of a \fIap_handler\fP to
-\fIr_addr\fP. Note, the stack contents and stack pointer will be
-restored to the values present when execution was anticipated at
-\fIap_addr\fP. 
-
 An entry is uniquely identified by the pair of \fIap_addr\fP and
 \fIap_handler\fP. To register or unregister both must be provided, passing
 a \fINULL\fP value for \fIap_handler\fP will result in undefined
@@ -37,6 +29,17 @@ the order in which they are executed when triggered is
 non-deterministic. Subsequent registrations of an entry is equivalent
 to replacing the already registered entry, which may be desireable to
 change the flags on an entry.
+
+The default behavior when returning from an \fIap_handler\fP is to
+resume execution at the \fIap_addr\fP. The return behavior may be 
+modified by returning using \fIap_sret\fP. The \fIap_sret\fP call 
+sets the return address of a \fIap_handler\fP to \fIr_addr\fP. 
+Note, the stack contents and stack pointer will be restored to the
+values present when execution was anticipated at \fIap_addr\fP. 
+
+When returning from an \fIap_handler\fP, you must use the APRET macro,
+as this ensures that the program is restored to the correct state. Returning
+without the APRET macro, either via return or exiting the handler's scope, will result in undefined behavior.
 
 .SH FLAGS
 
@@ -55,8 +58,7 @@ If
 .I ap_flags
 is
 .BR AP_ONESHOT
-then the entry will be unregistered before entering the
-\fIap_handler\fP.
+then the execution is allowed to continue after returning from the \fIap_handler\fP, and will only anticipate if it encounters the trigger address (e.g if the trigger address is inside a loop). If this flag is not set, execution will be immediately antticipated again after returning from the \fIap_handler\fP.
 
 .SH RETURN VALUE
 On success, \fBap_reg\fR() and \fBap_ureg\fR() return 0.
@@ -66,13 +68,12 @@ On error, these functions set errno to indicate the cause of the failure. Possib
 
 .TP
 .B EINVAL
-ap_flags contains bits other than AP_DISABLE or AP_ONESHOT (or their valid combinations), or ap_addr or r_addr is not a valid instruction address
+ap_flags contains bits other than AP_DISABLE or AP_ONESHOT (or their valid combinations), or ap_addr or r_addr is not a valid instruction address, or ap_handler is Null, or ap_addr equals 0.
 .TP
 .B ENOMEM
 No hardware breakpoints left to register the anticipation point entry.
 .TP
-.B EPERM
-ap_sret is called outside of an anticipation point handler (i.e., not in the context of a triggered ap_handler)
+
 .SH EXAMPLES
 An example demonstrating the use of these functions:
 .PP
@@ -83,15 +84,18 @@ An example demonstrating the use of these functions:
 #include "ap.h"
 
 
-void my_fn_handler(uint8_t addr) {
+
+void my_fn_handler(uintptr_t addr) {
+  uintptr_t new_addr = 0xdeadbeef; 
+  printf("Handler called for address: 0x%lx\n", addr);
   //...
-  // ap_sret(addr);
-  // now, handle for EPERM
+  ap_sret(new_addr);
+  APRET(0, 0);
 }
 
 int main() {
   uintptr_t instr_addr = 0x12345678; // Example instruction address
-  uint8_t flags = 0x00 | AP_ONESHOT; //enable the AP_ONESHOT flag
+  uint8_t flags = AP_ONESHOT; //enable the AP_ONESHOT flag
   if(ap_reg(instr_addr, my_fn_handler, flags) == -1) {
     switch (errno) {
       case EINVAL:
@@ -105,7 +109,7 @@ int main() {
     }
   }
 
-  ap_ureg(instr_addr, my_fn_handler);
+  ap_ureg(instr_addr, my_fn_handler); 
   return 0;
 }
 .fi
